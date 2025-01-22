@@ -1,0 +1,19 @@
+name: Terraform plan
+run-name: Infra-k8s Terraform plan
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+
+jobs:
+  terraform-plan:
+    uses: ./.github/workflows/_run-terraform-command.yml
+    with:
+      TERRAFORM_COMMAND: plan
+
+      AWS_REGION: us-east-1
+      TF_STATE_BUCKET_NAME: ${{vars.TF_STATE_BUCKET_NAME}}
+      TF_STATE_BUCKET_PATH: ${{vars.TF_STATE_BUCKET_PATH}}
+      TF_LOCK_TABLE_NAME: ${{vars.TF_LOCK_TABLE_NAME}}
+    secrets: inherit
