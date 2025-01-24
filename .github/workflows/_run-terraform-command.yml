@@ -36,10 +36,17 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
 
       - name: Create TF-Backend S3 Bucket
-        run: ./utils/create-s3-bucket.sh ${{ inputs.TF_STATE_BUCKET_NAME }}
+        run: |
+          chmod +x ./utils/create-s3-bucket.sh
+          ./utils/create-s3-bucket.sh ${{ inputs.TF_STATE_BUCKET_NAME }}
 
       - name: Create TF-Backend Dynamodb table
-        run: ./utils/create-dyndb-table.sh ${{ inputs.TF_LOCK_TABLE_NAME }}
+        run: |
+          chmod +x ./utils/create-dyndb-table.sh
+          ./utils/create-dyndb-table.sh ${{ inputs.TF_LOCK_TABLE_NAME }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
 
       - name: Terraform Init
         run: |
