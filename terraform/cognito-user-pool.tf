@@ -5,8 +5,14 @@
 # pré-requisito para o deploy. Integração com Autenticador (lambda)
 # ocorre no workflow de repositório próprio
 
-resource "aws_cognito_user_pool" "customer-logins" {
-  name = "customer-logins"
+variable "cognito_domain_name" {
+  type = string
+  description = "Domain name for the Cognito user pool"
+  default = "videoslice-logins"
+}
+
+resource "aws_cognito_user_pool" "videoslice-logins" {
+  name = "videoslice-logins"
 
   username_attributes = ["email"]
 
@@ -18,32 +24,19 @@ resource "aws_cognito_user_pool" "customer-logins" {
   admin_create_user_config {
     allow_admin_create_user_only = false
   }
-
-  schema {
-    attribute_data_type      = "String"
-    developer_only_attribute = false
-    mutable                  = false
-    name                     = "cpf"
-    required                 = false
-
-    string_attribute_constraints {
-      min_length = 11
-      max_length = 11
-    }
-  }
 }
 
-resource "aws_cognito_user_group" "clientes-cadastrados" {
-  name         = "ClienteCadastrado"
-  user_pool_id = aws_cognito_user_pool.customer-logins.id
-  description  = "Clientes cadastrados com CPF"
+resource "aws_cognito_user_group" "regular-users" {
+  name         = "User"
+  user_pool_id = aws_cognito_user_pool.videoslice-logins.id
+  description  = "Regular users of the Video Slice tool"
   precedence   = 1
 }
 
-resource "aws_cognito_user_group" "cliente-anonimo" {
-  name         = "ClienteAnonimo"
-  user_pool_id = aws_cognito_user_pool.customer-logins.id
-  description  = "Clientes não identificados, autenticação gerenciada pelo frontend"
+resource "aws_cognito_user_group" "admin-users" {
+  name         = "Admin"
+  user_pool_id = aws_cognito_user_pool.videoslice-logins.id
+  description  = "Administrator login. Can create users."
   precedence   = 1
 }
 
@@ -52,7 +45,7 @@ resource "aws_cognito_user_pool_client" "app-token-client" {
 
   callback_urls                        = ["http://localhost:8090/auth/response"]
   allowed_oauth_flows                  = ["code"]
-  user_pool_id = aws_cognito_user_pool.customer-logins.id
+  user_pool_id = aws_cognito_user_pool.videoslice-logins.id
   allowed_oauth_scopes                 = ["email", "openid", "phone"]
   supported_identity_providers         = ["COGNITO"]
 
@@ -68,12 +61,12 @@ resource "aws_cognito_user_pool_client" "app-token-client" {
 }
 
 resource "aws_cognito_user_pool_domain" "cognito-domain" {
-  domain       = "fiap-videoslice-users"
-  user_pool_id = aws_cognito_user_pool.customer-logins.id
+  domain       = var.cognito_domain_name
+  user_pool_id = aws_cognito_user_pool.videoslice-logins.id
 }
 
 output "user-pool-id" {
-  value = aws_cognito_user_pool.customer-logins.id
+  value = aws_cognito_user_pool.videoslice-logins.id
 }
 
 output "app-token-client-id" {
